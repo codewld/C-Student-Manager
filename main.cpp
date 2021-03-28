@@ -3,9 +3,10 @@
 #include <stdlib.h> 
 
 const int MAX = 50000;
+char schoolname[4][20] = {"计算机学院", "软件学院",
+     "通信学院", "自动化学院"};  //各学院信息
 
-
-struct Admin{
+struct Admin{  //管理员信息
     int a;
     char ID[10];
 	char pass[10];
@@ -28,7 +29,7 @@ struct Student{  //学生结构体定义
     }
 }student[MAX];
 
-void Clean(){  //清屏，并清空缓存区
+void Clean(){  //清屏，清空缓存区
     system("cls");  //清屏函数
     fflush(stdin);  //清空输入缓存区
 }
@@ -59,40 +60,40 @@ int CheckSupPas(){  //检查超级密码
 }
 
 int CheckSchool(char str[]){  //检查学院名
-    char school[4][20] = {"计算机学院","软件学院","通信学院","自动化学院"};
     int i;
     for (i = 0; i < 4; i++){
-        if (!strcmp(str, school[i]))    return i + 1;
+        if (!strcmp(str, schoolname[i]))    return i;
     }
-    return 0;
+    return -1;
+}
+
+int CheckID(char str[]){
+    struct Admin a_admin;  //存储文件中的管理员信息
+    FILE *fp;
+    if ((fp = fopen("admin", "rb")) == NULL){  //打开管理员账号文件
+        printf("管理员账号文件出错。\n");
+        exit(0);
+    }
+    while (!feof(fp)){
+        fread(&a_admin, sizeof(struct Admin), 1, fp);
+        if (!strcmp(a_admin.ID, str)){
+            printf("管理员ID重复！\n");
+            fclose(fp);
+            system("pause");
+            return 0;
+        }
+    }
+    fclose(fp);
+    return 1;
 }
 
 int SignUp(){  //注册
     Clean();
     printf("验证成功\n请开始注册！\n");
     struct Admin admin;
-    struct Admin *a_admin;
-    a_admin = (struct Admin*)malloc(sizeof(struct Admin)); 
     printf("请输入你的ID:");
     scanf("%s", admin.ID);
-
-    //检查ID是否重复
-    FILE *fp1;
-    if ((fp1 = fopen("admin", "rb")) == NULL){  //打开管理员账号文件
-        printf("管理员账号文件出错。\n");
-        exit(0);
-    }
-    while (!feof(fp1)){
-        fread(a_admin, sizeof(struct Admin), 1, fp1);
-        if (!strcmp(a_admin->ID, admin.ID)){
-            printf("管理员ID重复！\n");
-            fclose(fp1);
-            system("pause");
-            return 0;
-        }
-    }
-    fclose(fp1);
-
+    if (!CheckID(admin.ID))    return 0;  //检查ID是否重复
 	printf("请输入你的密码:");
     scanf("%s", admin.pass);
     FILE *fp;
@@ -171,7 +172,7 @@ void Input(){  //输入学生信息
         printf("本校共有学院如下：\n");
         printf("计算机学院、软件学院、通信学院、自动化学院\n");
         printf("请输入学院名：");    scanf("%s", school);
-        if (!CheckSchool(school)){  //检查学院名是否输入正确
+        if (CheckSchool(school) == -1){  //检查学院名是否输入正确
             printf("学校名输入错误，请检查！\n");
             system("pause");
             continue;
@@ -208,6 +209,7 @@ void ShowStu(char school[]){
         fread(&tempstu, sizeof(struct Student), 1, fp);
     }
     putchar('\n');
+    fclose(fp);
     system("pause");
 }
 
@@ -217,23 +219,88 @@ void ViewSchool(){
     printf("本校共有学院如下：\n");
     printf("计算机学院、软件学院、通信学院、自动化学院\n");
     printf("请输入学院名：");    scanf("%s", school);
-    switch(CheckSchool(school)){
-        case 1:
-            ShowStu("计算机学院");
-            break;
-        case 2:
-            ShowStu("软件学院");
-            break;
-        case 3:
-            ShowStu("通信学院");
-            break;
-        case 4:
-            ShowStu("自动化学院");
-            break;
-        default:
-            printf("输入错误，请重试！");
-            system("pause");
+    if (CheckSchool(school) == -1){  //若输入错误
+        printf("输入错误，请重试！");
+        system("pause");
     }
+    else    ShowStu(school);
+}
+
+void SearchStudent(){
+    int i;
+    int s_num;
+    printf("请输入学生学号：");
+    scanf("%d", &s_num);
+    for (i = 0; i < 4; i++){
+        struct Student tempstu;
+        FILE *fp;
+        if ((fp = fopen(schoolname[i], "rb")) == NULL){  //打开对应学院文件
+            printf("%s文件出错。\n", schoolname[i]);
+            exit(0);
+        }
+        while (!feof(fp)){  //若没有到文件末尾，就循环读入并判断
+            fread(&tempstu, sizeof(struct Student), 1, fp);
+            if (s_num == tempstu.num){
+                printf("学生已找到！\n");
+                printf("%-10s %-10s %-10d %-20s\n\n", tempstu.name, tempstu.id, tempstu.num, tempstu.major);
+                fclose(fp);
+                system("pause");
+                return;
+            }
+        }
+        fclose(fp);
+    }
+    printf("学生未找到！");
+    system("pause");
+}
+
+void ChangeStu(){  //修改学生信息
+    char school[20] = {0};  //用于保存学院名
+    int num = 0;
+    int isfind = 0;
+    struct Student tempstu;
+    Clean();
+    printf("开始输入！\n");
+    printf("本校共有学院如下：\n");
+    printf("计算机学院、软件学院、通信学院、自动化学院\n");
+    printf("请输入该学生所在的学院名：");    scanf("%s", school);
+    if (CheckSchool(school) == -1){  //检查学院名是否输入正确
+        printf("学校名输入错误，请检查！\n");
+        system("pause");
+    }
+    printf("请输入该生的学号：");
+    scanf("%d", &num);
+    FILE *fp;
+    if ((fp = fopen(school, "rb+")) == NULL){  //打开对应学院文件
+        printf("%s文件出错。\n", school);
+        exit(0);
+    }
+    while (!feof(fp)){  //若没有到文件末尾，就循环读入并判断
+        fread(&tempstu, sizeof(struct Student), 1, fp);
+        if (num == tempstu.num){
+            printf("请输入姓名：");    scanf("%s", tempstu.name);
+            printf("请输入身份证号(1001开始)：");    scanf("%s", tempstu.id);
+            printf("请输入专业名：");    scanf("%s", tempstu.major); 
+            fseek(fp, -sizeof(struct Student), 1);
+            fwrite(&tempstu, sizeof(struct Student), 1, fp);
+            /*printf("%-10s %-10s %-10d %-20s\n", tempstu.name, tempstu.id, tempstu.num, tempstu.major);
+            struct Student stu;
+            stu.num = num;
+            printf("请输入姓名：");    scanf("%s", stu.name);
+            printf("请输入身份证号(1001开始)：");    scanf("%s", stu.id);
+            printf("请输入专业名：");    scanf("%s", stu.major); 
+            printf("%-10s %-10s %-10d %-20s\n", stu.name, stu.id, stu.num, stu.major);
+            int a = fwrite(&stu, sizeof(struct Student), 1, fp);
+            printf("%d\n", a);*/
+            fclose(fp);
+            printf("修改成功！");
+            system("pause");
+            return;
+        }
+    }
+    fclose(fp);
+    printf("学生未找到！");
+    system("pause");
 }
 
 void Menu(){  //菜单
@@ -254,10 +321,10 @@ void Menu(){  //菜单
             ViewSchool();
             break;
         case '2':
-
+            SearchStudent();
             break;
         case '3':
-
+            ChangeStu();
             break;
         case '4':
             Input();
