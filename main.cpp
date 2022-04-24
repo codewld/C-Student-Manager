@@ -49,8 +49,9 @@ int CheckSupPas(){  //¼ì²é³¬¼¶ÃÜÂë
     }
     fread(a_superpass, sizeof(char), 10, fp);  //¶ÁÈë¼ÓÃÜºóµÄÃÜÂë
     fclose(fp);
-    printf("ÇëÊäÈë8Î»³¬¼¶ÃÜÂë£º");    scanf("%s", superpass); 
-    Encrypt(superpass, 8);  //½«ÊäÈëµÄÃÜÂë¼ÓÃÜ£¬ÒÔ±ã±È½Ï
+    printf("ÇëÊäÈë8Î»³¬¼¶ÃÜÂë [11111111]£º");
+    scanf("%s", superpass); 
+    // Encrypt(superpass, 8);  //½«ÊäÈëµÄÃÜÂë¼ÓÃÜ£¬ÒÔ±ã±È½Ï
     if (strcmp(superpass, a_superpass)){
         printf("³¬¼¶ÃÜÂë´íÎó£¬ÇëÖØÊÔ£¡\n");
         system("pause");
@@ -119,9 +120,9 @@ int SignIn(){  //µÇÂ¼
         exit(0);
     }
     //ÊäÈëÕËºÅÃÜÂë
-	printf("ÇëÊäÈëÄãµÄID:");    scanf("%s", admin.ID);
-	printf("ÇëÊäÈëÄãµÄÃÜÂë:");    scanf("%s", admin.pass);
-    Encrypt(admin.pass, 8);  //¼ÓÃÜÒÔ±ãĞ£Ñé
+	printf("ÇëÊäÈëÄãµÄID [admin1]:");    scanf("%s", admin.ID);
+	printf("ÇëÊäÈëÄãµÄÃÜÂë [111111]:");    scanf("%s", admin.pass);
+    // Encrypt(admin.pass, 8);  //¼ÓÃÜÒÔ±ãĞ£Ñé
     while (!feof(fp)){  //ÈôÃ»ÓĞµ½ÎÄ¼şÄ©Î²£¬¾ÍÑ­»·¶ÁÈë²¢ÅĞ¶Ï
         fread(a_admin, sizeof(struct Admin), 1, fp);
         if (!strcmp(a_admin->ID, admin.ID) && !strcmp(a_admin->pass, admin.pass)){
